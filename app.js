@@ -47,12 +47,24 @@ app.post('/api/login',async(req,res,next)=>{
     }
 })
 
-app.get('/api/login',async(req,res,next)=>{
+app.get('/api/login/:id',async(req,res,next)=>{
     try{
-        res.send(await UserLogin.findAll())
+        res.send(await UserLogin.findAll({
+          where:{
+            userId:req.params.id
+          }
+        }))
     }catch(ex){
         next(ex)
     }
+})
+
+app.get('/api/login',async(req,res,next)=>{
+  try{
+      res.send(await UserLogin.findAll())
+  }catch(ex){
+      next(ex)
+  }
 })
 
 app.use((err, req, res, next)=> {

@@ -28,7 +28,7 @@
         }
         async exchangeTokenForUser(){
           const token = window.localStorage.getItem('token');
-          const loginEntries = (await axios.get('/api/login')).data
+          let loginEntries = (await axios.get('/api/login')).data
           const tokens = loginEntries.map(elem=>elem.token)
           if(token){
             const auth = (await axios.get('/api/auth', {
@@ -36,14 +36,14 @@
                 authorization: token
               }
             })).data;
-            this.setState({ auth });
+            await this.setState({ auth });
             if(!tokens.includes(token)){
                 await axios.post('/api/login',{
                      id:this.state.auth.id,
                      token:token
                     })
             }
-            const loginEntries = (await axios.get('/api/login')).data
+            loginEntries = (await axios.get(`/api/login/${this.state.auth.id}`)).data
             this.setState({loginEntries})
           }
         }
