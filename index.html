@@ -1,0 +1,88 @@
+<html>
+  <head>
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js" integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ==" crossorigin="anonymous"></script>
+
+  </head>
+  <body>
+    <div id='root'></div>
+
+    <script type='text/babel'>
+      window.GITHUB_CLIENT_ID = '<%= GITHUB_CLIENT_ID %>';
+
+      class App extends React.Component{
+        constructor(){
+          super();
+          this.state = {
+            auth: {},
+            loginEntries: [],
+          };
+          this.logout = this.logout.bind(this);
+        }
+        async logout(){
+          window.localStorage.removeItem('token');
+          this.setState({ auth: {}});
+          this.setState({loggedIn:0})
+        }
+        async exchangeTokenForUser(){
+          const token = window.localStorage.getItem('token');
+          const loginEntries = (await axios.get('/api/login')).data
+          const tokens = loginEntries.map(elem=>elem.token)
+          if(token){
+            const auth = (await axios.get('/api/auth', {
+              headers: {
+                authorization: token
+              }
+            })).data;
+            this.setState({ auth });
+            if(!tokens.includes(token)){
+                await axios.post('/api/login',{
+                     id:this.state.auth.id,
+                     token:token
+                    })
+            }
+            const loginEntries = (await axios.get('/api/login')).data
+            this.setState({loginEntries})
+          }
+        }
+        componentDidMount(){
+          this.exchangeTokenForUser();
+        }
+        async login(credential){
+          const { token } = (await axios.post('/api/auth', credential)).data;
+          window.localStorage.setItem('token', token);
+          this.exchangeTokenForUser();
+        }
+        render(){
+          const { auth,loginEntries} = this.state;
+          const { login, logout } = this;
+          if(!auth.id){
+            return (
+              <a href={`https://github.com/login/oauth/authorize?client_id=${window.GITHUB_CLIENT_ID}`}>Login to Github</a>
+            );
+          }
+          else {
+            return (
+              <div>
+                <button onClick={ logout }>Logout ({ auth.username})</button>
+                <h1>Login History</h1>
+                <ul>
+                    {loginEntries.map((elem,idx)=>{
+                        return(
+                            <li key={idx}>{elem.loginDate}</li>
+                        )
+                    })}
+                </ul>
+              </div>
+            );
+          }
+
+
+        }
+      }
+      ReactDOM.render(<App />, document.querySelector('#root'));
+    </script>
+  </body>
+</html>

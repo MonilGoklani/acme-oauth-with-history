@@ -1,0 +1,4 @@
+module.exports = {
+    GITHUB_CLIENT_ID: '62f26cb7c94f515fb0f2',
+    GITHUB_CLIENT_SECRET: 'a2745f24ec058e789a27c29550bc82ced2000779'
+}
